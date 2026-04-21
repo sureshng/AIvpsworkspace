@@ -25,6 +25,8 @@ Most recent sessions at the top.
 - WireGuard peer 10.0.0.1 confirmed as the public VPS (77.37.62.240) — not Hostinger
 - This server's WireGuard IP is `10.0.0.3`; the VPS is `10.0.0.1`
 - All public domains proxy through VPS → WireGuard → this server (same pattern as `appofcag.space`)
+- `cag-monitor.service` runs a Python web dashboard on **port 9092** — full backup monitor UI (dark/light theme, tabs, live status)
+- Port 9092 is reverse-tunnelled to the VPS → accessible at `http://77.37.62.240:9092` (no auth, no nginx proxy)
 
 **Open items:**
 - [ ] Investigate why `cagattendanceapi` is unhealthy

@@ -36,8 +36,8 @@ Internet → VPS (77.37.62.240, 10.0.0.1) → WireGuard → This server (10.0.0.
 - **Docker** — 9 containers (apps, APIs, databases)
 - **MySQL** — system MySQL instance
 - **MS SQL Server** — `mssql-server.service`
-- **Reverse SSH tunnel** — `autossh` to VPS 10.0.0.1 (exposes ports 2223 and 9092)
-- **CAG Monitor** — Python backup monitoring dashboard
+- **Reverse SSH tunnel** — `autossh` to VPS 10.0.0.1 (exposes ports 2223 SSH and 9092 monitor)
+- **CAG Monitor** — Python web dashboard monitoring backups, exposed on port 9092 → `http://77.37.62.240:9092`
 - **Media server** — static files at `/home/mediaserver/appmedia/` served via `media.cagutility.click`
 
 ## Docker containers
@@ -86,8 +86,8 @@ Internet → VPS (77.37.62.240, 10.0.0.1) → WireGuard → This server (10.0.0.
 - `docker.service` — container runtime
 - `mysql.service` — system MySQL
 - `mssql-server.service` — Microsoft SQL Server
-- `reverse-tunnel.service` — autossh to 10.0.0.1 (ports 2223 SSH, 9092)
-- `cag-monitor.service` — Python backup monitor dashboard
+- `reverse-tunnel.service` — autossh to 10.0.0.1 (port 2223 → SSH, port 9092 → CAG Monitor)
+- `cag-monitor.service` — Python web dashboard (port 9092), monitors `/home/storageserver/backups/`
 
 ## Common operations
 
