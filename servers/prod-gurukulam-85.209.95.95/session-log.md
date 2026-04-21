@@ -4,6 +4,36 @@ Most recent sessions at the top.
 
 ---
 
+## 2026-04-21 — Deep scan, media backup & service discovery
+
+**Goal:** Understand full nginx/service layout and back up media server for replication.
+
+**What we did:**
+- Scanned all nginx sites-enabled: 4 domain configs + `app-locations/` modular includes
+- Read all systemd service files including hidden `cag-api.service`
+- Discovered shell-script-managed `cagformapi` (not systemd) — port 8092
+- Backed up media server: nginx config + all 58 files (22MB) to `backups/media-server/`
+- Created `plan.md` with PLAN-001 (media server replication)
+
+**Findings:**
+- 8 domains served: `caggurukulam.com`, `cagusa.org`, `cagapp.appofcag.site`, `caggurukulam.appofcag.site`, `appofcag.site`, `api.appofcag.site`, `api.gurukulam.appofcag.site`, `media.appofcag.site`
+- `cag-api.service` exists but is **stopped** (attendance API, jar at `/home/deploy/backend/cagattendanceapi/attendanceapi.jar`)
+- `cagformapi` (port 8092) managed via scripts in `/home/deploy/scripts/` — no systemd, won't survive reboot
+- Source code on server: `/home/source/javapp/cagattendanceapi/` and `/home/source/nativeapp/cagnativeapp/`
+- Media server config (SSL via Certbot): `/etc/nginx/sites-available/media.conf` → `/var/www/appmedia`
+
+**Open items:**
+- [ ] Confirm related local repo names
+- [ ] Confirm what `api1` serves vs `prodcaggurukulamapi`
+- [ ] Convert `cagformapi` script to a systemd service (won't survive reboots)
+- [ ] Investigate stopped `cag-api.service`
+- [ ] Confirm provider, region, timezone
+
+**Decisions:**
+- Media replication target: home server via `media.cagutility.click` (PLAN-001 complete)
+
+---
+
 ## 2026-04-21 — Onboarding session
 
 **Goal:** Set up this server in the workspace and discover what's running.
