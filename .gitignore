@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+.AppleDouble
+
+# Secrets — never commit these
+*.pem
+*.key
+*.env
+.env.*
+id_rsa
+id_ed25519
+
+# Large binary backups — use rsync/external storage instead
+servers/*/backups/*/appmedia/
+servers/*/backups/**/*.ttf
+servers/*/backups/**/*.otf
+servers/*/backups/**/*.woff*
+servers/*/backups/**/*.jpg
+servers/*/backups/**/*.jpeg
+servers/*/backups/**/*.png
+servers/*/backups/**/*.gif
+servers/*/backups/**/*.pdf
+servers/*/backups/**/*.docx
+servers/*/backups/**/*.xlsx
+servers/*/backups/**/*.JPG
