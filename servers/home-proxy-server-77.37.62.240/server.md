@@ -1,31 +1,44 @@
-# home-proxy-server-77.37.62.240
+# home-proxy-server (Home Server)
 
 ## Connection
 
 - **SSH alias:** `ssh home-proxy-server`
-  *(Port 2222, User sysadmin — configure in `~/.ssh/config`, see `SETUP.md`.)*
-- **Host:** 77.37.62.240
+  *(Reaches this machine via reverse tunnel on the public VPS — Port 2222 on 77.37.62.240)*
+- **Actual LAN IP:** 192.168.86.69
+- **WireGuard IP:** 10.0.0.3
 - **User:** sysadmin
-- **Port:** 2222
 - **Hostname:** intomyappserver
+
+## Architecture — IMPORTANT
+
+This is a **home server behind NAT**, not a public VPS.
+It is NOT directly reachable from the internet.
+
+```
+Internet → VPS (77.37.62.240, 10.0.0.1) → WireGuard → This server (10.0.0.3)
+```
+
+- All public traffic goes through the VPS nginx first, which proxies to `10.0.0.3` via WireGuard
+- SSH access: port 2222 on VPS → reverse tunnel → this server's port 22
+- The VPS (alias `vps-prod`) is the public-facing proxy — see `servers/vps-prod-77.37.62.240/`
 
 ## Environment
 
 - **Type:** production / dev (mixed — runs both prod and dev workloads)
-- **Provider:** unknown (public VPS)
+- **Provider:** home server (behind home router NAT)
 - **OS:** Ubuntu 22.04 (5.15.0-173)
-- **Region / timezone:** unknown
-- **WireGuard network:** 10.0.0.x — this server is a WireGuard peer, tunnels to 10.0.0.1
+- **Region / timezone:** EDT (US East)
+- **WireGuard IP:** 10.0.0.3 (peer: VPS at 10.0.0.1)
 
 ## What runs here
 
-- **Nginx** — reverse proxy for all Docker apps + domain routing
+- **Nginx** — local reverse proxy routing Docker app paths
 - **Docker** — 9 containers (apps, APIs, databases)
 - **MySQL** — system MySQL instance
 - **MS SQL Server** — `mssql-server.service`
-- **Reverse SSH tunnel** — `autossh` back to 10.0.0.1 (ports 2223, 9092)
+- **Reverse SSH tunnel** — `autossh` to VPS 10.0.0.1 (exposes ports 2223 and 9092)
 - **CAG Monitor** — Python backup monitoring dashboard
-- **Media server** — static files at `/var/www/appmedia` (HTTP, `media.appofcag.space`)
+- **Media server** — static files at `/home/mediaserver/appmedia/` served via `media.cagutility.click`
 
 ## Docker containers
 
@@ -41,24 +54,24 @@
 | `manageserverapi` | manageserverapi | 8086 | **unhealthy** |
 | `servermanageui` | servermanageui | 5174→80 | running |
 
-## Domains & routing
+## Domains & routing (all traffic enters via VPS proxy)
 
-| Domain / Path | Target | Notes |
+| Public Domain | VPS proxies to | This server handles |
 |---|---|---|
-| `appofcag.space` | port 8083 (cagappnative) | HTTP only |
-| `media.appofcag.space` | `/var/www/appmedia` | HTTP only, static files |
-| `<IP>/cagattendanceapi/` | port 8091 | IP-based, path-routed |
-| `<IP>/cag-ayyapa/` | port 4200 | IP-based |
-| `<IP>/cagayyappa/` | port 5173 | IP-based |
-| `<IP>/cagyathraapi/` `/yathra/` | port 8095 | IP-based |
-| `<IP>/manageserverapi/` | port 8086 | IP-based |
-| `<IP>/servermanageui/` | port 5174 | IP-based |
+| `appofcag.space` | `http://10.0.0.3/` | nginx → port 8083 (cagappnative) |
+| `media.cagutility.click` | `http://10.0.0.3/` | nginx → `/home/mediaserver/appmedia/` |
+| `<VPS-IP>/cagattendanceapi/` | `http://10.0.0.3/cagattendanceapi/` | nginx → port 8091 |
+| `<VPS-IP>/cag-ayyapa/` | `http://10.0.0.3/cag-ayyapa/` | nginx → port 4200 |
+| `<VPS-IP>/cagayyappa/` | `http://10.0.0.3/cagayyappa/` | nginx → port 5173 |
+| `<VPS-IP>/cagyathraapi/` `/yathra/` | `http://10.0.0.3/cagyathraapi/` | nginx → port 8095 |
+| `<VPS-IP>/manageserverapi/` | `http://10.0.0.3/manageserverapi/` | nginx → port 8086 |
+| `<VPS-IP>/servermanageui/` | `http://10.0.0.3/servermanageui/` | nginx → port 5174 |
 
-## Key paths (on the VPS)
+## Key paths (on this server)
 
 - Nginx sites: `/etc/nginx/sites-enabled/`
 - Nginx app locations: `/etc/nginx/app-locations/`
-- Media files: `/var/www/appmedia`
+- Media files: `/home/mediaserver/appmedia/` (served as `media.cagutility.click`)
 - App server files: `/home/appserver/` (devserver, logs, nginx-backups, prodserver, scripts)
 - Storage/backup: `/home/storageserver/` (backups, data, docs, logs, monitoring, scripts)
 - Monitor script: `/home/storageserver/monitoring/cag-monitor.py`
@@ -69,23 +82,12 @@
 
 ## Services (systemd)
 
-- `nginx.service` — reverse proxy
+- `nginx.service` — local reverse proxy
 - `docker.service` — container runtime
 - `mysql.service` — system MySQL
 - `mssql-server.service` — Microsoft SQL Server
-- `reverse-tunnel.service` — autossh tunnel to 10.0.0.1 (ports 2223 SSH, 9092)
+- `reverse-tunnel.service` — autossh to 10.0.0.1 (ports 2223 SSH, 9092)
 - `cag-monitor.service` — Python backup monitor dashboard
-
-## Jump host — reaching the home network
-
-This server is a WireGuard peer and SSH jump host. To reach internal machines:
-
-```bash
-# Home server via WireGuard (see homewg alias in ~/.ssh/config)
-ssh homewg   # → 10.0.0.3 via ProxyJump vps-prod
-```
-
-The `reverse-tunnel.service` exposes this server's SSH (port 22) back to 10.0.0.1 on port 2223.
 
 ## Common operations
 
@@ -95,14 +97,17 @@ The `reverse-tunnel.service` exposes this server's SSH (port 22) back to 10.0.0.
 - Check unhealthy containers: `docker ps --filter health=unhealthy`
 - Check monitor log: `tail -f /home/storageserver/logs/monitor.log`
 - Restart tunnel: `sudo systemctl restart reverse-tunnel`
-- Nginx reload: `sudo nginx -s reload`
+- Nginx reload: `sudo -n nginx -s reload`
+- Nginx stop/start (if reload not enough): `sudo -n nginx -s stop && sudo -n nginx`
 
 ## Warnings / notes
 
+- **Home server behind NAT** — cannot receive direct internet connections. All traffic via VPS proxy.
+- **Nginx changes require stop+start** — `nginx -s reload` has known issues on this server; use `nginx -s stop && nginx` instead.
 - **Mixed prod/dev** — both production apps and dev containers run here. Be careful which you restart.
-- **Reverse tunnel** — `reverse-tunnel.service` is critical for reaching home network. Don't stop without a plan to reconnect.
+- **Reverse tunnel is critical** — stopping `reverse-tunnel.service` cuts SSH access via the VPS. Don't stop without a direct LAN access plan.
 - `cagattendanceapi` and `manageserverapi` Docker containers are currently **unhealthy** — investigate.
-- `media.appofcag.space` is HTTP-only here (no SSL), unlike `media.appofcag.site` on prod-gurukulam which has Certbot SSL.
+- `sudo` requires password for most commands — only `nginx` and `docker`-related commands are passwordless.
 
 ## Related local repo(s)
 

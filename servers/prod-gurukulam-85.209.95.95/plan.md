@@ -1,30 +1,27 @@
 # Plan — prod-gurukulam-85.209.95.95
 
+## Completed plans
+
+---
+
+### PLAN-001 — Clone media server to home server ✅
+
+**Status:** Done (2026-04-21)
+**Goal:** Replicate `media.appofcag.site` static file server on the home server.
+
+**What was done:**
+- Backed up nginx config + all 58 media files (22MB) locally to `backups/media-server/`
+- Rsynced media files to home server at `/home/mediaserver/appmedia/`
+- Created `media-cagutility.conf` on home server nginx
+- Added DNS A record: `media.cagutility.click → 77.37.62.240` (VPS)
+- Added `media-cagutility.conf` on VPS nginx to proxy `media.cagutility.click → 10.0.0.3` (home server via WireGuard)
+- Verified: `http://media.cagutility.click/icons/icon.png` → 200 ✅
+
+**Remaining:**
+- [ ] Add HTTPS — run Certbot on VPS for `media.cagutility.click`
+
+---
+
 ## Active plans
 
----
-
-### PLAN-001 — Clone media server to a new VPS
-
-**Status:** In progress
-**Goal:** Replicate `media.appofcag.site` (static file server) on a second VPS.
-
-**What we have (backed up locally):**
-- Nginx config: `backups/media-server/media.conf`
-- All media files (58 files, 22MB): `backups/media-server/appmedia/`
-
-**Steps to deploy on new VPS:**
-- [ ] Onboard new VPS into this workspace
-- [ ] Install nginx on new VPS
-- [ ] `rsync` `appmedia/` to `/var/www/appmedia/` on new VPS
-- [ ] Copy and adapt `media.conf` (update domain or keep same if using DNS failover)
-- [ ] Point domain to new VPS IP (or use new subdomain)
-- [ ] Run Certbot to issue SSL cert for the domain
-- [ ] Enable nginx site and test
-
-**Notes:**
-- Media files are served with 30-day cache / `immutable` headers — no server-side state
-- CORS is open (`*`) — safe to serve from any domain/IP
-- SSL cert on source: `/etc/letsencrypt/live/media.appofcag.site/`
-
----
+*(none)*
