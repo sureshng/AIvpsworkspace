@@ -1,4 +1,4 @@
-# home-proxy-server (Home Server)
+# home-server-192.168.86.69 (Home Server)
 
 ## Connection
 

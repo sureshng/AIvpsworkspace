@@ -1,4 +1,4 @@
-# Session Log — home-proxy-server (Home Server)
+# Session Log — home-server-192.168.86.69 (Home Server)
 
 Most recent sessions at the top.
 
